@@ -1,75 +1,75 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const requestLogin = async () => {
-    if (!email || !username) {
-      alert("Please enter both email and username");
-      return;
-    }
+  const token = searchParams.get("token");
 
-    setLoading(true);
+  // ✅ VERIFY TOKEN WHEN USER CLICKS EMAIL LINK
+  useEffect(() => {
+    if (!token) return;
 
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/request-login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, username })
+    fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/auth/verify?token=${token}`
+    )
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.setItem("user", JSON.stringify(data));
+          navigate("/dashboard");
+        } else {
+          setMessage("Invalid or expired link");
         }
-      );
+      });
+  }, [token]);
 
-      const data = await res.json();
-
-      if (data.success) {
-        setMessage("✅ Login link sent to your email!");
-      } else {
-        setMessage("❌ Something went wrong");
+  // ✅ REQUEST LOGIN LINK
+  const requestLogin = async () => {
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/auth/request-login`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, username })
       }
-    } catch (err) {
-      setMessage("❌ Server error");
-    }
+    );
 
-    setLoading(false);
+    const data = await res.json();
+    if (data.success) {
+      setMessage("📩 Check your email for login link");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-xl shadow w-96">
-        <h2 className="text-2xl font-semibold mb-4">Login</h2>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-white p-8 rounded shadow w-96">
+        <h2 className="text-xl mb-4">Login</h2>
 
         <input
-          type="text"
           placeholder="Username"
-          className="w-full p-2 border rounded mb-3"
+          className="w-full p-2 border mb-3"
           onChange={(e) => setUsername(e.target.value)}
         />
 
         <input
-          type="email"
           placeholder="Email"
-          className="w-full p-2 border rounded mb-4"
+          className="w-full p-2 border mb-4"
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <button
           onClick={requestLogin}
-          disabled={loading}
-          className="w-full bg-purple-500 text-white py-2 rounded hover:bg-purple-600 transition"
+          className="w-full bg-purple-500 text-white py-2 rounded"
         >
-          {loading ? "Sending..." : "Send Login Link"}
+          Send Login Link
         </button>
 
-        {message && (
-          <p className="mt-4 text-center text-sm text-gray-700">
-            {message}
-          </p>
-        )}
+        {message && <p className="mt-4 text-center">{message}</p>}
       </div>
     </div>
   );
