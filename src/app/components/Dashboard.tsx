@@ -4,7 +4,6 @@ import {
   Heart,
   MessageCircle,
   BarChart3,
-  Copy,
   TrendingUp
 } from "lucide-react";
 
@@ -18,30 +17,34 @@ interface Message {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [copied, setCopied] = useState(false);
   const [username, setUsername] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   /* ----------------------------
-     AUTH CHECK + LOAD DATA
+     AUTH + FETCH DATA
   -----------------------------*/
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const userStr = localStorage.getItem("user");
 
-    if (!user) {
+    if (!userStr) {
       navigate("/login");
       return;
     }
 
-    const parsed = JSON.parse(user);
-    setUsername(parsed.username);
+    const user = JSON.parse(userStr);
+    setUsername(user.username);
 
     fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/messages/${parsed.username}`
+      `${import.meta.env.VITE_BACKEND_URL}/api/messages/${user.username}`
     )
       .then(res => res.json())
-      .then(setMessages)
-      .catch(console.error);
-  }, []);
+      .then(data => {
+        setMessages(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [navigate]);
 
   /* ----------------------------
      STATS
@@ -49,9 +52,9 @@ export default function Dashboard() {
   const totalMessages = messages.length;
 
   const emotionCount: Record<string, number> = {};
-  messages.forEach(msg => {
-    emotionCount[msg.emotion] =
-      (emotionCount[msg.emotion] || 0) + 1;
+  messages.forEach(m => {
+    emotionCount[m.emotion] =
+      (emotionCount[m.emotion] || 0) + 1;
   });
 
   const topEmotion =
@@ -71,8 +74,17 @@ export default function Dashboard() {
   /* ----------------------------
      UI
   -----------------------------*/
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl">
+        Loading dashboard...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+
       {/* Header */}
       <header className="bg-white border-b p-4 flex justify-between items-center">
         <h1 className="text-xl font-semibold text-purple-600">
@@ -91,7 +103,7 @@ export default function Dashboard() {
 
       <div className="max-w-6xl mx-auto p-6">
 
-        {/* Title */}
+        {/* Welcome */}
         <h2 className="text-3xl font-bold mb-2">
           Welcome, {username} 👋
         </h2>
@@ -101,7 +113,6 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-
           <div className="bg-white p-6 rounded-xl shadow">
             <MessageCircle className="text-purple-600 mb-2" />
             <h3 className="text-3xl">{totalMessages}</h3>
@@ -121,11 +132,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Emotion Graph */}
+        {/* Emotion Chart */}
         <div className="bg-white p-6 rounded-xl shadow mb-8">
           <h3 className="text-xl mb-4 flex items-center gap-2">
             <BarChart3 /> Emotion Analytics
           </h3>
+
+          {Object.entries(emotionCount).length === 0 && (
+            <p className="text-gray-500">No messages yet.</p>
+          )}
 
           {Object.entries(emotionCount).map(([emotion, count]) => (
             <div key={emotion} className="mb-3">
