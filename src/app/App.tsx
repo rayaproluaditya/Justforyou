@@ -10,9 +10,17 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+
+        {/* ✅ Dynamic user profile */}
+        <Route path="/profile/:username" element={<ProfilePage />} />
+
+        {/* Write message for a user */}
         <Route path="/write" element={<WriteMessagePage />} />
+
+        {/* Dashboard */}
         <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Year summary */}
         <Route path="/summary" element={<YearSummary />} />
       </Routes>
     </BrowserRouter>
