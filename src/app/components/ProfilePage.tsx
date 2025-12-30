@@ -1,49 +1,45 @@
-import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Heart, MessageCircle, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 
-const mockMessages = [
-  {
-    id: 1,
-    emotion: "Grateful",
-    text: "Your kindness and support during that difficult time meant the world to me. Thank you for being there.",
-    date: "2 days ago"
-  },
-  {
-    id: 2,
-    emotion: "Inspired",
-    text: "The way you approached that challenge inspired me to be braver in my own life. Thank you for showing me what's possible.",
-    date: "1 week ago"
-  },
-  {
-    id: 3,
-    emotion: "Thankful",
-    text: "I never got to say this properly, but your advice changed my perspective entirely. I'm truly thankful.",
-    date: "2 weeks ago"
-  },
-  {
-    id: 4,
-    emotion: "Grateful",
-    text: "You made me feel seen and heard when I needed it most. That meant everything to me.",
-    date: "3 weeks ago"
-  }
-];
-
-const emotionColors: Record<string, string> = {
-  Grateful: "from-purple-100 to-pink-100 text-purple-700",
-  Inspired: "from-blue-100 to-indigo-100 text-blue-700",
-  Thankful: "from-pink-100 to-rose-100 text-pink-700"
-};
+interface Message {
+  _id: string;
+  text: string;
+  emotion: string;
+  createdAt: string;
+}
 
 export function ProfilePage() {
+  const { username } = useParams();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!username) return;
+
+    fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/messages/${username}`
+    )
+      .then(res => res.json())
+      .then(data => {
+        setMessages(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [username]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+      
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100">
         <div className="container mx-auto px-4 py-4">
-          <Link to="/" className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors">
-            <Heart className="w-6 h-6" fill="currentColor" />
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-purple-600"
+          >
+            <Heart className="w-6 h-6" />
             <span className="text-xl">JustForYou</span>
           </Link>
         </div>
@@ -54,86 +50,81 @@ export function ProfilePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border border-purple-100 mb-8 text-center"
+          className="bg-white rounded-3xl p-8 shadow-xl border border-purple-100 text-center mb-10"
         >
-          {/* Profile Avatar */}
-          <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-3xl shadow-lg">
-              SM
-            </div>
+          {/* Avatar */}
+          <div className="w-24 h-24 mx-auto bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg mb-4">
+            {username?.charAt(0).toUpperCase()}
           </div>
 
-          {/* Name */}
-          <h1 className="text-3xl mb-3 text-gray-800">Sarah Miller</h1>
+          <h1 className="text-3xl text-gray-800 mb-2">
+            @{username}
+          </h1>
 
-          {/* Bio */}
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Teacher, coffee lover, and believer in the power of kind words. 
-            Share your thoughts anonymously — I'd love to hear from you! ✨
+          <p className="text-gray-600 mb-6">
+            People can anonymously share what they feel about you 💌
           </p>
 
-          {/* CTA Button */}
           <Link
-            to="/write"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            to={`/write?user=${username}`}
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
           >
             <MessageCircle className="w-5 h-5" />
             Write Something for Me
           </Link>
         </motion.div>
 
-        {/* Messages Section */}
+        {/* Messages */}
         <div className="space-y-6">
-          <h2 className="text-2xl text-gray-800 mb-6 flex items-center gap-2">
+          <h2 className="text-2xl text-gray-800 mb-4 flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-purple-600" />
             Messages
           </h2>
 
-          {mockMessages.map((message, index) => (
+          {loading && (
+            <p className="text-gray-500">Loading messages...</p>
+          )}
+
+          {!loading && messages.length === 0 && (
+            <div className="bg-white rounded-3xl p-10 shadow text-center">
+              <MessageCircle className="w-10 h-10 text-purple-500 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold">
+                No messages yet
+              </h3>
+              <p className="text-gray-500">
+                Share your link and be the first to receive one 💖
+              </p>
+            </div>
+          )}
+
+          {messages.map((msg, index) => (
             <motion.div
-              key={message.id}
+              key={msg._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="bg-white rounded-3xl p-6 shadow-lg border border-purple-100 hover:shadow-xl transition-shadow duration-300"
+              transition={{ delay: index * 0.1 }}
+              className="bg-white rounded-3xl p-6 shadow border"
             >
-              <div className="flex items-start gap-3 mb-4">
-                <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-2 rounded-full flex-shrink-0">
+              <div className="flex items-start gap-3">
+                <div className="bg-purple-100 p-2 rounded-full">
                   <MessageCircle className="w-5 h-5 text-purple-600" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`text-xs px-3 py-1 bg-gradient-to-r ${emotionColors[message.emotion]} rounded-full`}>
-                      {message.emotion}
-                    </span>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed">
-                    {message.text}
+                <div>
+                  <span className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full">
+                    {msg.emotion}
+                  </span>
+                  <p className="mt-2 text-gray-700">
+                    {msg.text}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Anonymous</span>
-                </div>
-                <span className="text-xs text-gray-400">{message.date}</span>
+
+              <div className="text-xs text-gray-400 mt-3">
+                {new Date(msg.createdAt).toLocaleDateString()}
               </div>
             </motion.div>
           ))}
         </div>
-
-        {/* Empty State (if no messages - not shown here but for reference) */}
-        {mockMessages.length === 0 && (
-          <div className="bg-white rounded-3xl p-12 shadow-lg border border-purple-100 text-center">
-            <div className="bg-gradient-to-br from-purple-100 to-pink-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-xl text-gray-700 mb-2">No messages yet</h3>
-            <p className="text-gray-500">Be the first to share something kind!</p>
-          </div>
-        )}
       </div>
     </div>
   );
