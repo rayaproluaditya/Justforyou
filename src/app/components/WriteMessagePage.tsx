@@ -15,19 +15,50 @@ export function WriteMessagePage() {
   const [message, setMessage] = useState("");
   const [selectedEmotion, setSelectedEmotion] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !selectedEmotion) return;
+
+    if (!message.trim() || !selectedEmotion) {
+      alert("Please write a message and select an emotion.");
+      return;
+    }
 
     setIsSubmitting(true);
-    
-    // Simulate submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Navigate back to profile with success
-    navigate("/profile");
+
+    try {
+      const response = await fetch(
+        "https://justforyou-backend.onrender.com/api/messages",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            text: message,
+            emotion: emotions.find(e => e.id === selectedEmotion)?.label
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      alert("Message sent successfully 💖");
+      setMessage("");
+      setSelectedEmotion(null);
+      navigate("/profile");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,14 +66,17 @@ export function WriteMessagePage() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100">
         <div className="container mx-auto px-4 py-4">
-          <Link to="/" className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors"
+          >
             <Heart className="w-6 h-6" fill="currentColor" />
-            <span className="text-xl">JustForYou</span>
+            <span className="text-xl font-semibold">JustForYou</span>
           </Link>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main */}
       <div className="container mx-auto px-4 py-12 max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -56,39 +90,41 @@ export function WriteMessagePage() {
                 <Sparkles className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <h3 className="text-lg text-purple-900 mb-1">Writing to Sarah Miller</h3>
+                <h3 className="text-lg text-purple-900 mb-1">
+                  Write a Kind Message
+                </h3>
                 <p className="text-purple-700 text-sm">
-                  Share how Sarah has impacted your life. Your message will be completely anonymous.
+                  Your message will be completely anonymous.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Message Form */}
-          <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-8 shadow-xl border border-purple-100">
-            <h2 className="text-2xl text-gray-800 mb-6">Your Message</h2>
+          {/* Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-3xl p-8 shadow-xl border border-purple-100"
+          >
+            <h2 className="text-2xl text-gray-800 mb-6">
+              Your Message
+            </h2>
 
-            {/* Text Area */}
-            <div className="mb-6">
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Write something kind or meaningful…"
-                className="w-full h-48 px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all resize-none"
-                maxLength={500}
-              />
-              <div className="flex justify-between items-center mt-2 px-2">
-                <p className="text-sm text-gray-500">
-                  {message.length}/500 characters
-                </p>
-              </div>
+            {/* Message Input */}
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Write something kind or meaningful…"
+              className="w-full h-48 px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all resize-none"
+              maxLength={500}
+            />
+
+            <div className="flex justify-between text-sm text-gray-500 mt-2">
+              <span>{message.length}/500 characters</span>
             </div>
 
             {/* Emotion Selector */}
-            <div className="mb-8">
-              <label className="block text-gray-700 mb-3">
-                How do you feel?
-              </label>
+            <div className="mt-6">
+              <p className="text-gray-700 mb-3">How do you feel?</p>
               <div className="flex flex-wrap gap-3">
                 {emotions.map((emotion) => (
                   <button
@@ -107,26 +143,27 @@ export function WriteMessagePage() {
               </div>
             </div>
 
-            {/* Anonymous Notice */}
-            <div className="bg-purple-50 rounded-2xl p-4 mb-6">
-              <p className="text-sm text-purple-800 text-center">
-                <Sparkles className="w-4 h-4 inline mr-2" />
-                This message is completely anonymous and cannot be traced back to you.
-              </p>
+            {/* Notice */}
+            <div className="bg-purple-50 rounded-2xl p-4 mt-6 text-center">
+              <Sparkles className="inline w-4 h-4 text-purple-600 mr-1" />
+              <span className="text-sm text-purple-800">
+                This message is completely anonymous.
+              </span>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex gap-4">
+            {/* Buttons */}
+            <div className="flex gap-4 mt-8">
               <Link
                 to="/profile"
-                className="flex-1 px-6 py-4 bg-gray-100 text-gray-700 rounded-2xl text-center hover:bg-gray-200 transition-colors"
+                className="flex-1 px-6 py-4 bg-gray-100 text-gray-700 rounded-2xl text-center hover:bg-gray-200 transition"
               >
                 Cancel
               </Link>
+
               <button
                 type="submit"
-                disabled={!message.trim() || !selectedEmotion || isSubmitting}
-                className="flex-1 px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="flex-1 px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
