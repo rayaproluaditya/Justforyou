@@ -1,3 +1,13 @@
 @import './fonts.css';
-@import './tailwind.css';
-@import './theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f9fafb;
+}
+

@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LandingPage } from "./components/LandingPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { WriteMessagePage } from "./components/WriteMessagePage";
-import { Dashboard } from "./components/Dashboard";
+import  Dashboard  from "./components/Dashboard";
 import { YearSummary } from "./components/YearSummary";
 import CreateProfile from "./components/CreateProfile";
 import Login from "./components/Login";
