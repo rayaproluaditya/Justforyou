@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Heart, Send, Sparkles } from "lucide-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 const emotions = [
   { id: 1, label: "Grateful", color: "from-purple-100 to-pink-100 text-purple-700 hover:from-purple-200 hover:to-pink-200" },
