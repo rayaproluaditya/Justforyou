@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Heart, MessageCircle, Sparkles } from "lucide-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
+
 
 export function LandingPage() {
   return (
